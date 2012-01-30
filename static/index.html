@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Nodify.US Configuration</title>
+    <style type="text/css">
+html {
+  overflow-y: scroll;
+}
+
+body {
+  background-color: #DFDFDF;
+  font-family: sans-serif;
+}
+
+#header {
+  background-color: #7F7FEF;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 88px;
+  min-width: 800px;
+  width: 100%;
+}
+
+#header_logo {
+  position: relative;
+  top: 4px;
+  left: 4px;
+  height: 80px;
+  width: 64px;
+}
+
+#header_title {
+  position: absolute;
+  top: 1px;
+  right: 4px;
+  font-size: 400%;
+  color: #DFDFDF;
+}
+
+#content {
+  position: absolute;
+  top: 89px;
+  left: 4px;
+  padding: 4px;
+  width: 98%;  
+}
+
+#footer {
+  width: 100%;
+  background-color: #7F7FEF;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  height: 22px;
+  line-height: 22px;
+  min-width: 800px;
+  text-align: center;
+  color: #DFDFDF;
+  font-size: 75%;
+}
+
+table {
+  width: 100%;
+}
+
+td.keys {
+  width: 175px;
+  background-color: #7F7FEF;
+  text-align: right;
+  color: #DFDFDF;
+  padding: 4px;
+}
+
+td.values {
+  background-color: #7F7FEF;
+  text-align: left;
+  color: #DFDFDF;
+}
+
+td.submit {
+  background-color: #7F7FEF;
+  text-align: center;
+}
+
+td.message {
+  background-color: #BFBFF7;
+  text-align: center;
+}
+
+td.error {
+  background-color: #F7BFBF;
+  text-align: center;
+}
+
+input.text {
+  position: relative;
+  left: 1%;
+  width: 97%;
+}
+
+input.button {
+  position: relative;
+  left: 1%;
+  width: 97%;
+}
+
+textarea {
+  position: relative;
+  left: 1%;
+  width: 97%;
+  height: 80px;
+}
+
+    </style>
+    <script type="text/javascript">
+function submit() {
+  var fullname = document.getElementById( 'fullname' ).value;
+  var username = document.getElementById( 'username' ).value;
+  var pass1 = document.getElementById( 'pass1' ).value;
+  var pass2 = document.getElementById( 'pass2' ).value;
+  var public = document.getElementById('public').value;
+  var payload = {
+    fullname: fullname,
+    username: username,
+    password: pass1,
+    public: public
+  };
+
+  var error = document.getElementById( 'error' );
+  var request;
+
+  if( pass1 === pass2 ) {
+    error.innerHTML = "configuring user account. one sec!";
+    error.className = "message";
+    if( 'undefined' !== typeof XMLHttpRequest ) {
+      request = new XMLHttpRequest();
+    } else {
+      request = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    request.open( 'POST', '/api/config', true );
+    request.setRequestHeader( 'Content-Type', 'application/json' );
+    request.onreadystatechange = function( oEvent ) {
+      if( request.readyState === 4 ) {
+        if( request.status === 200 ) {
+          if( request.responseText ) {
+            var rb = JSON.parse( request.responseText );
+            if( rb.success ) {
+              error.innerHTML = "user account configured";
+              error.className = "message";
+            } else {
+              error.innerHTML = "error: " + rb.error;
+              error.className = "error";
+            }
+          } else {
+            error.innerHTML = "error: invalid response from server";
+            error.className = "error";
+          }
+        } else {
+          error.innerHTML = "error: (" + request.status + ") " + request.statusText ;
+          error.className = "error";
+        }
+      }
+    };
+    request.send( JSON.stringify( payload ) );
+  } else {
+    error.innerHTML = "passwords don't match. try again.";
+    error.className = "error";
+  }
+}
+    </script>
+  </head>
+  <body>
+    <div id="header">
+      <img id="header_logo" src="./img/nodify_logo_small.png"/>
+      <div id="header_title">node.js dev kickstarter</div>
+    </div>
+    <div id="content">
+      <h1>Success!</h1>
+      <p>
+        If you're reading this, it means you've successfully installed and
+        started the nodify.us node.js dev kickstarter appliance. For security
+        reasons, we don't ship the appliance with a default password; so
+        before you can use the appliance, you need to set the password for
+        the default nodify account.
+      </p>
+
+      <h1>Config</h1>
+      <table>
+        <tr>
+          <td colspan="2" id="error" class="message">enter details of an admin account, then press "submit" to create it.</td>
+        </tr>
+        <tr>
+          <td class="keys">full name</td>
+          <td class="values"><input class="text" id="fullname"/></td>
+        </tr>
+        <tr>
+          <td class="keys">username</td>
+          <td class="values"><input class="text" id="username"/></td>
+        </tr>
+        <tr>
+          <td class="keys">password</td>
+          <td class="values"><input class="text" type="password" id="pass1"/></td>
+        </tr>
+        <tr>
+          <td class="keys">password (again)</td>
+          <td class="values"><input class="text" type="password" id="pass2"/></td>
+        </tr>
+        <tr>
+          <td class="keys">ssh key (optional)</td>
+          <td class="values"><textarea id="public"></textarea></td>
+        </tr>
+        <tr>
+          <td class="submit"><input class="button" type="button" onclick="submit()" value="submit"/></td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+
+      <h1>A Few More Details</h1>
+    </div>
+    <div id="footer">
+      <div class="copy">Copyright &copy; 2011-2012 Meadhbh S. Hamrick, All Rights Reserved.</div>
+    </div>
+  </body>
+</html>
