@@ -19,12 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-var http  = require( 'http' );
-var url   = require( 'url' );
-var spawn = require( 'child_process' ).spawn;
+var express = require( 'express' );
+var spawn   = require( 'child_process' ).spawn;
 
 var host_port = 2525;
-var host_address = '127.0.0.1';
+
+var app = express.createServer();
+
+app.use( express.bodyParser() );
+app.use( express.static( __dirname + '/static' ) );
+app.use( app.router );
 
 function run_this ( cmd, args, input, failure, success ) {
     var process = spawn( cmd, args );
@@ -41,23 +45,11 @@ function run_this ( cmd, args, input, failure, success ) {
     process.stdin.end();
 }
 
-var app = http.createServer( function ( request, response ) {
-    var body = '';
-    var rb;
+app.post( '/api/config', function( request, response ) {
+    var rb = request.body;
     var rv = {};
-    var url_bits = url.parse( request.url );
-    request.on( 'data', function( chunk ) {
-        body += chunk;
-    } );
     
-    request.on( 'end', function ( ) { 
-        if( ( '/config' === url_bits.path ) && ( 'POST' === request.method ) ) {
-            rb = JSON.parse( body );
-            config( finish_request );
-        } else {
-            finish_request( 404 );
-        }
-    } );
+    config( finish_request );
     
     function is_param_valid ( param ) {
       return( ('string' === typeof param) && (param.length > 0) );
@@ -104,4 +96,5 @@ var app = http.createServer( function ( request, response ) {
     }
 } );
 
-app.listen( host_port, host_address );
+app.listen( host_port );
+//app.listen( host_port, host_address );

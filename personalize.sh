@@ -26,7 +26,7 @@ fi
 echo "%LARB-I-UNIX; Adding Unix account for $USERNAME."
 echo "$PASSWORD
 $PASSWORD
-" | /usr/sbin/adduser --gecos "$FULLNAME" --add_extra_groups $USERNAME
+" | /usr/sbin/adduser --gecos "$FULLNAME" --conf /opt/larb/adduser.conf $USERNAME
 
 echo "%LARB-I-SAMBA; Adding Samba account for $USERNAME."
 echo "$PASSWORD
@@ -40,22 +40,6 @@ if [ ! -e /home/$USERNAME/.ssh ]; then
   chgrp $USERNAME /home/$USERNAME/.ssh
   chmod 700 /home/$USERNAME/.ssh
 fi
-
-echo "%LARB-I-LINKING; Adding symbolic links for nile and amazon."
-if [ -L /etc/nginx/sites-enabled/nile.conf ]; then
-  rm /etc/nginx/sites-enabled/nile.conf
-fi
-ln -s /home/$USERNAME/Projects/nile/nile.conf /etc/nginx/sites-enabled/nile.conf
-
-if [ -L /etc/nginx/sites-enabled/amazon.conf ]; then
-  rm /etc/nginx/sites-enabled/amazon.conf
-fi
-ln -s /home/$USERNAME/Projects/amazon/amazon.conf /etc/nginx/sites-enabled/amazon.conf
-
-if [ -L /var/www/amazon ]; then
-  rm /var/www/amazon
-fi
-ln -s /home/$USERNAME/Projects/amazon/static /var/www/amazon
 
 echo "%LARB-I-AUTHKEY; Adding authorized key to user's ~/.ssh/authorized_keys."
 tr -d '\n\r' >> /home/$USERNAME/.ssh/authorized_keys
