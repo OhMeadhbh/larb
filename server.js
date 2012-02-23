@@ -20,81 +20,56 @@
 // IN THE SOFTWARE.
 
 var express = require( 'express' );
-var spawn   = require( 'child_process' ).spawn;
+var user_provision = require( './user_provision' );
+var debug_proxy = require( './debug_proxy' );
 
 var host_port = 2525;
+var app;
+var proxy;
 
-var app = express.createServer();
-
-app.use( express.bodyParser() );
-app.use( express.static( __dirname + '/static' ) );
-app.use( app.router );
-
-function run_this ( cmd, args, input, failure, success ) {
-    var process = spawn( cmd, args );
-    
-    process.on( 'exit', function ( code ) {
-        if( 0 != code ) {
-            failure();
-        } else {
-            success();
-        }
-    } );
-    
-    process.stdin.write( input );
-    process.stdin.end();
-}
-
-app.post( '/api/config', function( request, response ) {
-    var rb = request.body;
-    var rv = {};
-    
-    config( finish_request );
-    
-    function is_param_valid ( param ) {
-      return( ('string' === typeof param) && (param.length > 0) );
-    }
-
-    function config ( callback ) {
-      if( is_param_valid( rb.username ) && is_param_valid( rb.password ) ) {
-        var cmd = '/opt/larb/personalize.sh';
-        var args = [ rb.fullname, rb.username, rb.password ];
-        var input = rb.public + '\n';
-
-        function success () {
-          rv.success = true;
-          callback( 200 );
-        }
-
-        function failure () {
-          rv.success = false;
-          rv.error = 'personalization process failed';
-          callback( 200 );
-        }
-        run_this( cmd, args, input, failure, success );
-      } else {
-        rv.success = false;
-        rv.error = 'missing required parameter';
-        callback( 200 );
-      }
-    }
-    
-    function finish_request ( status ) {
-        var response_text;
-        var content_type;
-        
-        if( 200 === status ) {
-            response_text = JSON.stringify( rv );
-            content_type = 'application/json';
-        } else {
-            response_text = 'error ' + status;
-            content_type = 'text/plain';
-        }
-        
-        response.writeHead( status, {'Content-Type': content_type} );
-        response.end( response_text );
-    }
+process.on( 'SIGHUP', function () {
+	if( app ) {
+		app.close();
+		setTimeout( function () {
+			start_app();	
+		}, 10000 );
+		
+	}
+	if( proxy ) {
+		proxy.close();
+		setTimeout( function () {
+			start_proxy();
+		}, 10000 );
+	}
 } );
 
-app.listen( host_port );
-//app.listen( host_port, host_address );
+function start_app() {
+	app = express.createServer();
+
+	app.use( express.bodyParser() );
+	app.use( express.static( __dirname + '/static' ) );
+	app.use( app.router );
+
+	user_provision.addEndpoints( app );
+	
+	app.listen( host_port );
+}
+
+function start_proxy() {
+	var proxy_opts = {
+			local: {
+				port: 5858,
+				host: '127.0.0.1'
+			},
+			remote: {
+				port: 5858,
+				host: '192.168.56.2'
+			}
+		};
+
+	proxy = new debug_proxy( proxy_opts );
+	proxy.listen();	
+}
+
+start_app();
+start_proxy();
