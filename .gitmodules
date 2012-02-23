@@ -1,0 +1,3 @@
+[submodule "skel/Projects/nodify-express"]
+	path = skel/Projects/nodify-express
+	url = git://github.com/OhMeadhbh/nodify-express.git
