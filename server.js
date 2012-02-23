@@ -20,8 +20,8 @@
 // IN THE SOFTWARE.
 
 var express = require( 'express' );
-var user_provision = require( './user_provision' );
-var debug_proxy = require( './debug_proxy' );
+var user_provision = require( './src/user_provision' );
+var debug_proxy = require( './src/debug_proxy' );
 
 var host_port = 2525;
 var app;
